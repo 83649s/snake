@@ -11,15 +11,11 @@ struct applePositions {
     int yCoordinates[APPLECOUNT];
 };
 
-
 void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound) {
     int cycleCount = 1;
     int noOverlap = 0;
     while (!noOverlap) {
         cycleCount++;
-        if (cycleCount == 10) {
-            break;
-        }
         noOverlap = 1;
         for (int i = 0; i < APPLECOUNT; ++i) {
             for (int j = 0; j < APPLECOUNT; ++j) {
@@ -30,6 +26,9 @@ void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound) {
                 }
             }
         }
+        if (cycleCount == 2) {
+            break;
+        }
     }
 }
 
@@ -39,10 +38,10 @@ int main(void) {
     int x = 1, y = 1;
     int maxY = 0, maxX = 0;
     char controls[4] = {'d', 'a', 's', 'w'};
+    char controlsInverted[4] = {'a', 'd', 'w', 's'};
     int heading = 0;
 
     struct applePositions apples;
-
 
     // TODO add a dynamiclly allocated array for the tail positions
     int snakeTailSize = 1;
@@ -69,6 +68,7 @@ int main(void) {
         clear();
         char* score = malloc(sizeof(char) * 100);
         sprintf(score, "%i", snakeTailSize - 1);
+        // Renders the current score
         mvprintw(0, 0, score);
         // Renders thee head of the snake at the current position
         mvprintw(y, x, "#");
@@ -89,12 +89,18 @@ int main(void) {
         refresh();
         usleep(DELAY);
         // Input handling 
+        int previousHeading = heading;
+
         for (int i = 0; i < 4; ++i) {
             if (controls[i] == ch) {
                 heading = i;
             }
         }
 
+        // Disables the ability to do instant 180 degree turns 
+        if (controls[heading] == controlsInverted[previousHeading]) {
+            heading = previousHeading;
+        } 
         switch (heading) {
             case 0:
                 x += 1;
@@ -110,7 +116,7 @@ int main(void) {
                 break;
             default:
                 break;
-        }
+            }
 
         // Tail logic
         int snakeTailXPosTemp[sizeof(snakeTailXPositions)];
@@ -135,9 +141,19 @@ int main(void) {
 
         preventAppleOverlap(apples.xCoordinates, apples.yCoordinates, maxX, maxY);
 
+        // End if the snake collides with its own tail
+        for (int i = 0; i < snakeTailSize; ++i) {
+            for (int j = 0; j < snakeTailSize; ++j) {
+                if (snakeTailXPositions[i] == snakeTailXPositions[j] && snakeTailYPositions[i] == snakeTailYPositions[j] && i != j) {
+                    endwin();
+                    return 0;   
+                }
+            }
+        }
         // End the game if snake is offscreen
         if (x >= maxX || x < 0 || y >= maxY || y < 0) {
-            break;
+            endwin();
+            return 0;
         }
         free(score);
         
