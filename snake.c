@@ -4,6 +4,31 @@
 #include <string.h>
 
 #define DELAY 75000
+#define APPLECOUNT 10
+
+struct applePositions {
+    int xCoordinates[APPLECOUNT];
+    int yCoordinates[APPLECOUNT];
+};
+
+
+void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound) {
+    int cycleCount = 1;
+    int noOverlap = 0;
+    while (!noOverlap) {
+        noOverlap = 1;
+        for (int i = 0; i < APPLECOUNT; ++i) {
+            for (int j = 0; j < APPLECOUNT; ++j) {
+                if (appleX[i] == appleY[j] && i != j) {
+                    noOverlap = 0;
+                    appleX[i] = rand() % xBound;
+                    appleY[i] = rand() % yBound;
+                }
+            }
+        }
+    }
+}
+
 
 int main(void) {
     int ch;
@@ -12,9 +37,7 @@ int main(void) {
     char controls[4] = {'d', 'a', 's', 'w'};
     int heading = 0;
 
-    int appleCount = 10;
-    int appleXPos[appleCount];
-    int appleYPos[appleCount];
+    struct applePositions apples;
 
     int snakeTailSize = 1;
     int snakeTailXPos[1000];
@@ -26,9 +49,9 @@ int main(void) {
     nodelay(stdscr, TRUE);
     getmaxyx(stdscr, maxY, maxX);
 
-    for (int i = 0; i < appleCount; i++) {
-        appleXPos[i] = rand() % maxX;
-        appleYPos[i] = rand() % maxY;
+    for (int i = 0; i < APPLECOUNT; i++) {
+        apples.xCoordinates[i] = rand() % maxX;
+        apples.yCoordinates[i] = rand() % maxY;
     }
 
     while (TRUE) {
@@ -43,13 +66,13 @@ int main(void) {
             mvprintw(snakeTailYPos[i], snakeTailXPos[i], "#");
         }
 
-        for (int i = 0; i < appleCount; ++i) {
-            if (x == appleXPos[i] & y == appleYPos[i]) {
-                appleXPos[i] = -1;
-                appleYPos[i] = -1;
+        for (int i = 0; i < APPLECOUNT; ++i) {
+            if (x == apples.xCoordinates[i] & y == apples.yCoordinates[i]) {
+                apples.xCoordinates[i] = -1;
+                apples.yCoordinates[i] = -1;
                 snakeTailSize++;
             }
-            mvprintw(appleYPos[i], appleXPos[i], "@");
+            mvprintw(apples.yCoordinates[i], apples.xCoordinates[i], "@");
         }
         refresh();
         usleep(DELAY);
@@ -88,16 +111,19 @@ int main(void) {
             snakeTailYPos[i + 1] = snakeTailYPosTemp[i];
         }
 
-        for (int i = 0; i < appleCount; i++) {
-            if (appleXPos[i] == -1) {
-                appleXPos[i] = rand() % maxX;
-                appleYPos[i] = rand() % maxY;
+        for (int i = 0; i < APPLECOUNT; ++i) {
+            if (apples.xCoordinates[i] == -1) {
+                apples.xCoordinates[i] = rand() % maxX;
+                apples.yCoordinates[i] = rand() % maxY;
             }
         }
+
+        preventAppleOverlap(apples.xCoordinates, apples.yCoordinates, maxX, maxY);
 
         if (x >= maxX || x < 0 || y >= maxY || y < 0) {
             break;
         }
+        free(score);
         
     }
     endwin();
