@@ -6,32 +6,12 @@
 #define DELAY 100000
 #define APPLECOUNT 10
 
+void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound);
+
 struct applePositions {
     int xCoordinates[APPLECOUNT];
     int yCoordinates[APPLECOUNT];
 };
-
-void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound) {
-    int cycleCount = 1;
-    int noOverlap = 0;
-    while (!noOverlap) {
-        cycleCount++;
-        noOverlap = 1;
-        for (int i = 0; i < APPLECOUNT; ++i) {
-            for (int j = 0; j < APPLECOUNT; ++j) {
-                if (appleX[i] == appleX[j] &&  appleY[i] == appleY[j] && i != j) {
-                    noOverlap = 0;
-                    appleX[i] = rand() % xBound;
-                    appleY[i] = rand() % yBound;
-                }
-            }
-        }
-        if (cycleCount == 2) {
-            break;
-        }
-    }
-}
-
 
 int main(void) {
     int ch;
@@ -62,7 +42,7 @@ int main(void) {
 
     preventAppleOverlap(apples.xCoordinates, apples.yCoordinates, maxX, maxY);
 
-    while (TRUE) {
+    while (1) {
         ch = getch();
 
         clear();
@@ -88,7 +68,7 @@ int main(void) {
         }
         refresh();
         usleep(DELAY);
-        // Input handling 
+        // Input handling
         int previousHeading = heading;
 
         for (int i = 0; i < 4; ++i) {
@@ -116,13 +96,15 @@ int main(void) {
                 break;
             default:
                 break;
-            }
+        }
 
         // Tail logic
-        int snakeTailXPosTemp[sizeof(snakeTailXPositions)];
-        int snakeTailYPosTemp[sizeof(snakeTailYPositions)];
-        memcpy(snakeTailXPosTemp, snakeTailXPositions, sizeof(snakeTailXPositions));
-        memcpy(snakeTailYPosTemp, snakeTailYPositions, sizeof(snakeTailYPositions));
+        int* snakeTailXPosTemp = malloc(sizeof(snakeTailXPositions));
+        int* snakeTailYPosTemp = malloc(sizeof(snakeTailYPositions));
+		for (int i = 0; i < snakeTailSize; ++i) {
+			snakeTailXPosTemp[i] = snakeTailXPositions[i];
+			snakeTailYPosTemp[i] = snakeTailYPositions[i];
+		}
         snakeTailXPositions[0] = x;
         snakeTailYPositions[0] = y;
 
@@ -156,8 +138,33 @@ int main(void) {
             return 0;
         }
         free(score);
+		free(snakeTailXPosTemp);
+		free(snakeTailYPosTemp);
         
     }
     endwin();
     return 0;
 }
+
+
+void preventAppleOverlap(int* appleX, int* appleY, int xBound, int yBound) {
+    int cycleCount = 1;
+    int noOverlap = 0;
+    while (!noOverlap) {
+        cycleCount++;
+        noOverlap = 1;
+        for (int i = 0; i < APPLECOUNT; ++i) {
+            for (int j = 0; j < APPLECOUNT; ++j) {
+                if (appleX[i] == appleX[j] &&  appleY[i] == appleY[j] && i != j) {
+                    noOverlap = 0;
+                    appleX[i] = rand() % xBound;
+                    appleY[i] = rand() % yBound;
+                }
+            }
+        }
+        if (cycleCount == 2) {
+            break;
+        }
+    }
+}
+
